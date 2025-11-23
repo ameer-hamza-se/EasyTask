@@ -1,327 +1,295 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const EasyTaskApp());
+  runApp(EasyTaskApp());
 }
 
 class EasyTaskApp extends StatelessWidget {
-  const EasyTaskApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'EasyTask',
       debugShowCheckedModeBanner: false,
+      title: 'EasyTask',
       theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF1F1F1F), // dark grey background
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF2C2C2C),
-          centerTitle: true,
-          titleTextStyle: TextStyle(
-            color: Colors.white70,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Color(0xFF3A3A3A),
-          foregroundColor: Colors.white70,
-        ),
-        cardColor: const Color(0xFF2B2B2B),
-        iconTheme: const IconThemeData(color: Colors.white70),
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(color: Colors.white70),
+        primarySwatch: Colors.green,
+        scaffoldBackgroundColor: Colors.green.shade50,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.green.shade600,
+          foregroundColor: Colors.white,
         ),
       ),
-      home: const HomePage(),
+      home: HomeScreen(),
     );
   }
 }
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+// -------------------------------------------------------------
+// TASK MODEL (simple, no date, only material.dart used)
+// -------------------------------------------------------------
+class Task {
+  final String id;
+  final String title;
+  final String description;
+  final String priority;
 
+  Task({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.priority,
+  });
+}
+
+// -------------------------------------------------------------
+// HOME SCREEN
+// -------------------------------------------------------------
+class HomeScreen extends StatefulWidget {
   @override
-  State<HomePage> createState() => _HomePageState();
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomePageState extends State<HomePage> {
-  final List<Map<String, dynamic>> tasks = [];
+class _HomeScreenState extends State<HomeScreen> {
+  List<Task> tasks = [];
 
-  void _openAddTaskDialog() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF2B2B2B),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      isScrollControlled: true,
-      builder: (context) {
-        return AddTaskSheet(onAdd: _addTask);
-      },
+  void _addTask() async {
+    final Task? newTask = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => AddTaskScreen()),
     );
-  }
 
-  void _addTask(String title, String desc, DateTime date, String priority) {
-    setState(() {
-      tasks.add({
-        'title': title,
-        'desc': desc,
-        'dueDate': date,
-        'priority': priority,
+    if (newTask != null) {
+      setState(() {
+        tasks.insert(0, newTask); // newest first
       });
-    });
+    }
   }
 
-  void _removeTask(int index) {
-    setState(() {
-      tasks.removeAt(index);
-    });
+  void _deleteTask(String id) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text("Delete Task?"),
+        content: Text("Are you sure you want to delete this task?"),
+        actions: [
+          TextButton(
+            child: Text("Cancel"),
+            onPressed: () => Navigator.pop(ctx),
+          ),
+          TextButton(
+            child: Text("Delete", style: TextStyle(color: Colors.red)),
+            onPressed: () {
+              setState(() {
+                tasks.removeWhere((t) => t.id == id);
+              });
+              Navigator.pop(ctx);
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("EasyTask")),
-      body: tasks.isEmpty
-          ? const Center(
-        child: Text(
-          "Add Task",
-          style: TextStyle(color: Colors.white38, fontSize: 20),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Icon(Icons.check_circle_outline),
+            SizedBox(width: 8),
+            Text("EasyTask"),
+          ],
         ),
-      )
-          : ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: tasks.length,
-        itemBuilder: (context, index) {
-          final task = tasks[index];
-          Color priorityColor;
-          if (task['priority'] == 'High') {
-            priorityColor = Colors.grey.shade400;
-          } else if (task['priority'] == 'Medium') {
-            priorityColor = Colors.grey.shade500;
-          } else {
-            priorityColor = Colors.grey.shade600;
-          }
-
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ListTile(
-              leading: const Icon(Icons.task_alt),
-              title: Text(
-                task['title'],
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (task['desc'].isNotEmpty)
-                    Text(
-                      task['desc'],
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 13,
-                      ),
-                    ),
-                  const SizedBox(height: 3),
-                  Text(
-                    "Due: ${task['dueDate'].day}/${task['dueDate'].month}/${task['dueDate'].year}",
-                    style: const TextStyle(
-                      color: Colors.white54,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      const Icon(Icons.flag, size: 16, color: Colors.white38),
-                      const SizedBox(width: 5),
-                      Text(
-                        task['priority'],
-                        style: TextStyle(
-                          color: priorityColor,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete_outline),
-                onPressed: () => _removeTask(index),
-              ),
-            ),
-          );
-        },
+        actions: [
+          IconButton(
+            icon: Icon(Icons.group),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (c) => CommunityScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (c) => SettingsScreen()),
+              );
+            },
+          ),
+        ],
       ),
+      body: tasks.isEmpty ? _emptyState() : _taskList(),
       floatingActionButton: FloatingActionButton(
-        onPressed: _openAddTaskDialog,
-        child: const Icon(Icons.add),
+        onPressed: _addTask,
+        child: Icon(Icons.add),
       ),
+    );
+  }
+
+  Widget _emptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.list_alt, size: 70, color: Colors.green.shade300),
+          SizedBox(height: 14),
+          Text("No tasks yet", style: TextStyle(fontSize: 18)),
+          SizedBox(height: 6),
+          Text("Tap + to add your first task"),
+        ],
+      ),
+    );
+  }
+
+  Widget _taskList() {
+    return ListView.builder(
+      padding: EdgeInsets.all(10),
+      itemCount: tasks.length,
+      itemBuilder: (context, index) {
+        final t = tasks[index];
+        return Card(
+          elevation: 2,
+          child: ListTile(
+            leading: Icon(Icons.check_circle_outline, color: Colors.green),
+            title: Text(t.title, style: TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (t.description.isNotEmpty) Text(t.description),
+                SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.flag, size: 14),
+                    SizedBox(width: 4),
+                    Text(t.priority),
+                  ],
+                ),
+              ],
+            ),
+            trailing: IconButton(
+              icon: Icon(Icons.delete_outline),
+              onPressed: () => _deleteTask(t.id),
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
-class AddTaskSheet extends StatefulWidget {
-  final Function(String, String, DateTime, String) onAdd;
-
-  const AddTaskSheet({super.key, required this.onAdd});
-
+// -------------------------------------------------------------
+// ADD TASK SCREEN (title, description, priority)
+// -------------------------------------------------------------
+class AddTaskScreen extends StatefulWidget {
   @override
-  State<AddTaskSheet> createState() => _AddTaskSheetState();
+  _AddTaskScreenState createState() => _AddTaskScreenState();
 }
 
-class _AddTaskSheetState extends State<AddTaskSheet> {
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController descController = TextEditingController();
-  DateTime? selectedDate;
-  String selectedPriority = 'Low';
+class _AddTaskScreenState extends State<AddTaskScreen> {
+  final _titleCtrl = TextEditingController();
+  final _descCtrl = TextEditingController();
 
-  void _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.dark().copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Colors.grey,
-              onSurface: Colors.white70,
-              surface: Color(0xFF2B2B2B),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null) {
-      setState(() {
-        selectedDate = picked;
-      });
+  String _priority = "Normal";
+
+  void _saveTask() {
+    if (_titleCtrl.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Task title required")));
+      return;
     }
+
+    final task = Task(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: _titleCtrl.text.trim(),
+      description: _descCtrl.text.trim(),
+      priority: _priority,
+    );
+
+    Navigator.pop(context, task);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding:
-      EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Center(
-                child: Text(
-                  "Add New Task",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white70),
-                ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Add Task"),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Task Title", style: TextStyle(fontWeight: FontWeight.w600)),
+            SizedBox(height: 6),
+            TextField(
+              controller: _titleCtrl,
+              decoration: InputDecoration(
+                hintText: "Enter task title",
+                border: OutlineInputBorder(),
               ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: titleController,
-                style: const TextStyle(color: Colors.white70),
-                decoration: const InputDecoration(
-                  labelText: 'Task Title',
-                  labelStyle: TextStyle(color: Colors.white60),
-                  filled: true,
-                  fillColor: Color(0xFF3A3A3A),
-                  border: OutlineInputBorder(),
-                ),
+            ),
+            SizedBox(height: 14),
+
+            Text("Description", style: TextStyle(fontWeight: FontWeight.w600)),
+            SizedBox(height: 6),
+            TextField(
+              controller: _descCtrl,
+              decoration: InputDecoration(
+                hintText: "Task description (optional)",
+                border: OutlineInputBorder(),
               ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: descController,
-                style: const TextStyle(color: Colors.white70),
-                decoration: const InputDecoration(
-                  labelText: 'Short Description',
-                  labelStyle: TextStyle(color: Colors.white60),
-                  filled: true,
-                  fillColor: Color(0xFF3A3A3A),
-                  border: OutlineInputBorder(),
-                ),
+              maxLines: 3,
+            ),
+            SizedBox(height: 14),
+
+            Text("Priority", style: TextStyle(fontWeight: FontWeight.w600)),
+            SizedBox(height: 6),
+            DropdownButtonFormField<String>(
+              value: _priority,
+              decoration: InputDecoration(border: OutlineInputBorder()),
+              items: ["Low", "Normal", "High"]
+                  .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+                  .toList(),
+              onChanged: (v) => setState(() => _priority = v!),
+            ),
+
+            SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _saveTask,
+                child: Text("Save Task"),
               ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      dropdownColor: const Color(0xFF3A3A3A),
-                      value: selectedPriority,
-                      decoration: const InputDecoration(
-                        labelText: 'Priority',
-                        labelStyle: TextStyle(color: Colors.white60),
-                        border: OutlineInputBorder(),
-                      ),
-                      items: ['Low', 'Medium', 'High']
-                          .map((p) => DropdownMenuItem(
-                        value: p,
-                        child: Text(
-                          p,
-                          style: const TextStyle(color: Colors.white70),
-                        ),
-                      ))
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedPriority = value!;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  ElevatedButton.icon(
-                    onPressed: _pickDate,
-                    icon: const Icon(Icons.date_range, color: Colors.white70),
-                    label: Text(
-                      selectedDate == null
-                          ? "Set Date"
-                          : "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}",
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3A3A3A),
-                      foregroundColor: Colors.white70,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (titleController.text.isEmpty || selectedDate == null) return;
-                    widget.onAdd(titleController.text, descController.text,
-                        selectedDate!, selectedPriority);
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey.shade700,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 45),
-                  ),
-                  child: const Text("Add Task"),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+// -------------------------------------------------------------
+// PLACEHOLDER SCREENS
+// -------------------------------------------------------------
+class SettingsScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Settings")),
+      body: Center(child: Text("Settings screen (coming soon)")),
+    );
+  }
+}
+
+class CommunityScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Community")),
+      body: Center(child: Text("Community screen (coming soon)")),
     );
   }
 }
