@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "949414655670",
+    "project_id": "easy-task-8153e",
+    "storage_bucket": "easy-task-8153e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:949414655670:android:f8a1f0330962f82b9d1817",
+        "android_client_info": {
+          "package_name": "com.example.easytask"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSeuNWUb7Mq_0jjlppcKMgi8W8LWhpcEc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
