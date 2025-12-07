@@ -21,6 +21,26 @@ A few resources to get you started if this is your first Flutter project:
 - Basic navigation added
 - Placeholder UI added for task view
 
+**Week 3:**
+- Login and Logout Function
+- Firebase Connectivity
+- Authentication
 
+**Week4:**
+
+- **Email/Password Login with Firebase**  
+  Secure authentication for users to sign in and manage their tasks.
+
+- **Add, View, and Delete Tasks in Firestore**  
+  Users can create tasks, see them in a list, and remove them when completed.
+
+- **Smooth Animations**  
+  Slide animation on the Splash Screen and subtle UI animations throughout the app for a polished experience.
+
+- **Stable App Flow**  
+  Works seamlessly from Splash → Login → Home → Main Features without crashes.
+
+- **Clean and Responsive UI**  
+  User-friendly interface that works well on different device sizes.
 For help getting started with Flutter development, view the online documentation, which offers tutorials, samples, guidance on mobile development, and a full API reference:  
 https://docs.flutter.dev/
