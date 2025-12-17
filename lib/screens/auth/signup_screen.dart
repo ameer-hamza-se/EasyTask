@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import '../../providers/task_provider.dart'; // Import Provider
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -9,12 +11,10 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  // Controllers for text fields
   final TextEditingController fullCtrl = TextEditingController();
   final TextEditingController userCtrl = TextEditingController();
   final TextEditingController passCtrl = TextEditingController();
-
-  bool obscure = true; // Toggles password visibility
+  bool obscure = true;
 
   @override
   void dispose() {
@@ -34,15 +34,12 @@ class _SignupScreenState extends State<SignupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Logo Section
               Center(
                 child: Column(
                   children: [
                     Ink.image(
-                      image: const AssetImage('assets/logo.png'),
-                      height: 120,
-                      onImageError: (e, s) {}, // Handle missing asset
-                    ),
+                        image: const AssetImage('assets/logo.png'), height: 120,
+                        onImageError: (e, s) {}),
                     const SizedBox(height: 6),
                     const Text("EASY TASK",
                         style: TextStyle(
@@ -50,17 +47,13 @@ class _SignupScreenState extends State<SignupScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 40),
               const Center(
                 child: Text("Signup",
                     style:
                     TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               ),
-
               const SizedBox(height: 30),
-
-              // Full Name Field
               const Text("Full Name"),
               const SizedBox(height: 8),
               TextField(
@@ -70,10 +63,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   prefixIcon: Icon(Icons.person),
                 ),
               ),
-
               const SizedBox(height: 15),
-
-              // Email / Username Field
               const Text("User Name (Email)"),
               const SizedBox(height: 8),
               TextField(
@@ -83,10 +73,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   prefixIcon: Icon(Icons.alternate_email),
                 ),
               ),
-
               const SizedBox(height: 15),
-
-              // Password Field
               const Text("Password"),
               const SizedBox(height: 8),
               TextField(
@@ -96,15 +83,13 @@ class _SignupScreenState extends State<SignupScreen> {
                   hintText: "Set Password",
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: IconButton(
-                    icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
+                    icon:
+                    Icon(obscure ? Icons.visibility_off : Icons.visibility),
                     onPressed: () => setState(() => obscure = !obscure),
                   ),
                 ),
               ),
-
               const SizedBox(height: 30),
-
-              // Signup Button
               Align(
                 alignment: Alignment.centerRight,
                 child: SizedBox(
@@ -117,38 +102,40 @@ class _SignupScreenState extends State<SignupScreen> {
                           borderRadius: BorderRadius.circular(10)),
                     ),
                     onPressed: () async {
-                      // Basic validation
-                      if (userCtrl.text.isEmpty || passCtrl.text.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Please fill all fields")));
+                      if (fullCtrl.text.isEmpty ||
+                          userCtrl.text.isEmpty ||
+                          passCtrl.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text("Please fill all fields")));
                         return;
                       }
 
                       try {
-                        // Create user in Firebase
-                        await FirebaseAuth.instance
+                        // 1. Create User
+                        UserCredential userCredential = await FirebaseAuth.instance
                             .createUserWithEmailAndPassword(
                           email: userCtrl.text.trim(),
                           password: passCtrl.text.trim(),
                         );
 
-                        // NOTE: If you want to store the "Full Name" or update the
-                        // TaskProvider with this user's details, you would do it here
-                        // before navigating.
+                        // 2. Update Display Name in Firebase
+                        if (userCredential.user != null) {
+                          await userCredential.user!
+                              .updateDisplayName(fullCtrl.text.trim());
 
-                        if (context.mounted) {
-                          Navigator.pushReplacementNamed(context, '/home');
-                        }
-                      } on FirebaseAuthException catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(e.message ?? "Signup Failed")));
+                          // 3. Update Provider state locally
+                          if (context.mounted) {
+                            context.read<TaskProvider>().setUser(
+                              fullCtrl.text.trim(),
+                              userCtrl.text.trim(),
+                            );
+
+                            Navigator.pushReplacementNamed(context, '/home');
+                          }
                         }
                       } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(e.toString())));
-                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(e.toString())));
                       }
                     },
                     child: const Text("Signup",
@@ -157,10 +144,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 40),
-
-              // Login Link
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

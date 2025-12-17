@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import '../../providers/task_provider.dart'; // Import Provider
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -46,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             image: const AssetImage('assets/logo.png'),
                             height: 160,
                             width: 160,
-                            onImageError: (exception, stackTrace) {},
+                            onImageError: (e, s) {},
                           ),
                           Padding(
                             padding: const EdgeInsets.only(left: 0),
@@ -149,14 +151,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       }
 
                       try {
-                        await FirebaseAuth.instance.signInWithEmailAndPassword(
+                        final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
                           email: email,
                           password: password,
                         );
 
-                        if (context.mounted) {
+                        // --- UPDATE PROVIDER WITH REAL NAME ---
+                        if (context.mounted && credential.user != null) {
+                          final user = credential.user!;
+                          context.read<TaskProvider>().setUser(
+                              user.displayName ?? "No Name",
+                              user.email ?? email
+                          );
+
                           Navigator.pushReplacementNamed(context, '/home');
                         }
+
                       } on FirebaseAuthException catch (e) {
                         setState(() {
                           if (e.code == 'user-not-found' ||

@@ -1,11 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/task_model.dart';
 
 class TaskProvider extends ChangeNotifier {
   // --- State ---
   final List<Task> _tasks = [];
-  final String _userName = "John Doe"; // In a real app, fetch this from Firebase Auth
-  final String _userEmail = "john.doe@easytask.com";
+  String _userName = "Guest User";
+  String _userEmail = "guest@easytask.com";
+
+  // --- Constructor ---
+  // Checks if a user is already logged in when the app starts
+  TaskProvider() {
+    _loadCurrentUser();
+  }
+
+  void _loadCurrentUser() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _userName = user.displayName ?? "No Name";
+      _userEmail = user.email ?? "";
+      notifyListeners();
+    }
+  }
 
   // --- Getters ---
   List<Task> get tasks => List.unmodifiable(_tasks);
@@ -17,10 +33,17 @@ class TaskProvider extends ChangeNotifier {
 
   // --- Actions ---
 
+  // Call this after Login or Signup to update the Drawer immediately
+  void setUser(String name, String email) {
+    _userName = name;
+    _userEmail = email;
+    notifyListeners();
+  }
+
   void addTask(Task task) {
     _tasks.add(task);
     _sortTasks();
-    notifyListeners(); // This updates all screens listening to this provider
+    notifyListeners();
   }
 
   void deleteTask(Task task) {

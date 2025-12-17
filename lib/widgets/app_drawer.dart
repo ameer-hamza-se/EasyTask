@@ -49,8 +49,8 @@ class AppDrawer extends StatelessWidget {
           ),
           const Divider(),
           ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text("Logout"),
+            leading: const Icon(Icons.logout, color: Colors.red,),
+            title: const Text("Logout", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
             onTap: () async {
               await FirebaseAuth.instance.signOut();
               if (context.mounted) {
